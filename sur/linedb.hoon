@@ -9,7 +9,8 @@
 ::  with your files
 ::
 +$  index      @ud
-+$  file       wain
++$  line       @ud
++$  file       wain :: TODO ordered map gives you more structural sharing
 +$  file-name  path
 +$  diff       (urge:clay cord)
 +$  snapshot   (map file-name file)
@@ -17,6 +18,10 @@
   $:  author=ship
       =snapshot
       diffs=(map file-name diff)
+  ==
++$  branch
+  $:  snaps=((mop index commit) lth)
+      head=index
   ==
 ::
 ++  snap-on  ((on index commit) lth)
