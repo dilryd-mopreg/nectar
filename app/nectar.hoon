@@ -108,7 +108,7 @@
     ::
         [%x %custom-query @ @ ~]
       =/  app=@tas  i.t.t.path
-      =/  =query:n    ;;(query:n i.t.t.t.path)
+      =/  =query:n    ;;(query:n (cue i.t.t.t.path))
       ::  perform query and return result
       ~&  >  "your query: "
       ~&  >  query
