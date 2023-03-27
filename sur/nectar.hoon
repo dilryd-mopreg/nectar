@@ -15,6 +15,13 @@
       [%stop source=@p =table-name]
   ==
 ::
++$  set-perms
+  %+  pair  table-name  ::  the local app poking us, for now
+  $%  permission-level
+      [%add @p]
+      [%del @p]
+  ==
+::
 +$  app    term
 +$  label  @
 +$  table-name  [=app =label]

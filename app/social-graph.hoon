@@ -5,8 +5,8 @@
 ::
 ::  %social-graph agent state
 ::
-+$  state-1
-  $:  %1
++$  state-2
+  $:  %2
       graph=social-graph:g
       perms=(map app:g permission-level:g)
       tracking=(map [app:g tag:g] ship)
@@ -32,7 +32,7 @@
 =/  subgraph-sub  (mk-subs subgraph ,[%track @ @ ~])
 =/  subgraph-pub  (mk-pubs subgraph ,[%track @ @ ~])
 ::
-=|  state=state-1
+=|  state=state-2
 =<
 |_  =bowl:gall
 +*  this  .
@@ -40,12 +40,12 @@
     def   ~(. (default-agent this %|) bowl)
     da-sub
       =/  da  (da subgraph ,[%track @ @ ~])
-      ~(. da subgraph-sub bowl -:!>(*result:da) -:!>(*from:da))
+      (da subgraph-sub bowl -:!>(*result:da) -:!>(*from:da) -:!>(*fail:da))
     du-pub
       =/  du  (du subgraph ,[%track @ @ ~])
-      ~(. du subgraph-pub bowl -:!>(*result:du))
+      (du subgraph-pub bowl -:!>(*result:du))
 ::
-++  on-init  `this(state *state-1)
+++  on-init  `this(state *state-2)
 ::
 ++  on-save  !>([state subgraph-sub subgraph-pub])
 ::
@@ -54,10 +54,12 @@
   ^-  (quip card _this)
   ?:  =(%0 -.q.vase)
     on-init
-  =/  old  !<([=state-1 =_subgraph-sub =_subgraph-pub] vase)
+  ?:  =(%1 -.-.q.vase)
+    on-init
+  =/  old  !<([=state-2 =_subgraph-sub =_subgraph-pub] vase)
   :-  ~
   %=  this
-    state         state-1.old
+    state         state-2.old
     subgraph-sub  subgraph-sub.old
     subgraph-pub  subgraph-pub.old
   ==
@@ -124,7 +126,10 @@
       ::  TODO *kick* anyone tracking us!
       =^  cards  subgraph-pub
         (give:du-pub [%track p -.tag.q ~] [%gone-top-level-tag ~])
-      :-  (surf:da-sub source.q %social-graph [%track p -.tag.q ~])^cards
+      =^  cards  subgraph-sub
+        =-  [(weld cards -.-) +.-]
+        (surf:da-sub source.q %social-graph [%track p -.tag.q ~])
+      :-  cards
       this(tracking.state (~(put by tracking.state) [p -.tag.q^~] source.q))
     ::
         %stop

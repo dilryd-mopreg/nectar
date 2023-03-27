@@ -29,10 +29,10 @@
     def   ~(. (default-agent this %|) bowl)
     da-sub
       =/  da  (da shared-table ,[%track @ @ ~])
-      ~(. da table-sub bowl -:!>(*result:da) -:!>(*from:da))
+      (da table-sub bowl -:!>(*result:da) -:!>(*from:da) -:!>(*fail:da))
     du-pub
       =/  du  (du shared-table ,[%track @ @ ~])
-      ~(. du table-pub bowl -:!>(*result:du))
+      (du table-pub bowl -:!>(*result:du))
 ::
 ++  on-init  `this(state *state-1)
 ::
@@ -67,8 +67,6 @@
                 %update-rows
             ==
         -.query.poke
-    ::  if we are deleting or renaming a table that people track,
-    ::  ....do something about that
     =.  database.state  +:(~(q db:n database.state) poke)
     =^  cards  table-pub
       ::  stupid ass type refinement is the reason for this structure
@@ -79,10 +77,35 @@
           ?(%insert %delete %update-rows)
         (give:du-pub [%track app.poke table.query.poke ~] query.poke)
       ::
-          ?(%add-table %drop-table %rename-table)
+          %add-table
+        (give:du-pub [%track app.poke name.query.poke ~] query.poke)
+      ::
+          ?(%drop-table %rename-table)
+        ::  if we are deleting or renaming a table that people track,
+        ::  ....do something about that
         `table-pub
       ==
     [cards this]
+  ::
+      %nectar-set-perms
+    ?>  =(our src):bowl
+    =/  poke  !<(set-perms:n vase)
+    :-  ~
+    %=    this
+        perms.state
+      %+  ~(put by perms.state)  p.poke
+      ?-  -.q.poke
+        ?(%public %private %set)  q.poke
+          %add
+        =/  =permission-level:n  (~(gut by perms.state) p.poke [%set ~])
+        ?>  ?=(%set -.permission-level)
+        set+(~(put in +.permission-level) +.q.poke)
+          %del
+        =/  =permission-level:n  (~(gut by perms.state) p.poke [%set ~])
+        ?>  ?=(%set -.permission-level)
+        set+(~(del in +.permission-level) +.q.poke)
+      ==
+    ==
   ::
       %nectar-add-procedure
     ?>  =(our src):bowl
@@ -106,8 +129,10 @@
       ::  TODO *kick* anyone tracking us!
       ::  =^  cards  table-pub
       ::    (give:du-pub [%track p -.tag.q ~] [%gone-top-level-tag ~])
-      :-  (surf:da-sub source.q %nectar [%track [- + ~]:table-name.q])^~
-      this(tracking.state (~(put by tracking.state) table-name.q source.q))
+      =^  cards  table-sub
+        (surf:da-sub source.q %nectar [%track [- + ~]:table-name.q])
+      :-  cards
+      this(tracking.state (~(put by tracking.state) [table-name source]:q))
     ::
         %stop
       ::  TODO stop tracking a solid-state sub!
@@ -131,7 +156,6 @@
       ::  make sure we are actually tracking this table?
       ::  ?.  =(src.msg (~(gut by tracking.state) [app label] our.bowl))
       ::    `this  ::  TODO ignore for now, but crash in future when we can leave
-      ~&  >>  "got on-rock for table {<[app label]>}"
       `this
     ==
   ::
