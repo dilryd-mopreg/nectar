@@ -43,17 +43,21 @@
       clustered=?
   ==
 ::
+
++$  typ
+$?  %ud  %ux  %da  %dr  %f  %p
+    %t   %ta  %tas
+    %rd  %rh  %rq  %rs  %s
+    ::  more complex column types
+    %list  %set  %map  %blob
+==
+
+::
 +$  column-name  term
 +$  column-type
   $:  spot=@      ::  where column sits in row
       optional=?  ::  if optional, value is unit
-      $=  typ
-      $?  %ud  %ux  %da  %dr  %f  %p
-          %t   %ta  %tas
-          %rd  %rh  %rq  %rs  %s
-          ::  more complex column types
-          %list  %set  %map  %blob
-      ==
+      =typ
   ==
 ::
 +$  record
@@ -113,8 +117,8 @@
       [%rename-table old=@ new=@]
       [%drop-table name=@]
       [%add-column table=@ col-name=@ =column-type fill=value]
-      ::  %drop-column
-      ::  %edit-column
+      [%drop-column table=@ col-name=@]
+      [%edit-column table=@ col-name=@ optional=(unit ?) typ=(unit typ)]
       ::  ??
   ==
 ::
