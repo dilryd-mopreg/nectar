@@ -3,13 +3,28 @@
 ::            database
 ::
 |%
-::  +database map of table
+::  +database: map of tables
 +$  database  (map table-name table)
 ::  need name of app poking to be in bowl! for now, this:
-+$  query-poke      [app=@tas =query]
-+$  procedure-poke  [app=@tas label=@tas =stored-procedure]
++$  query-poke      [=app =query]
++$  procedure-poke  [=app =label =stored-procedure]
+::  poke with this to indicate that you want to track a remote table
++$  track
+  %+  pair  app  ::  the local app poking us, for now
+  $%  [%start source=@p =table-name]
+      [%stop source=@p =table-name]
+  ==
 ::
-+$  table-name  [app=@tas label=@]
++$  app    term
++$  label  @
++$  table-name  [=app =label]
+::
++$  permission-level
+  $%  [%private ~]
+      [%public ~]
+      [%set (set @p)]
+      ::  anything else here?
+  ==
 ::
 ::  TODO:  external indices
 ::  make index a separate object from table
@@ -43,15 +58,13 @@
       clustered=?
   ==
 ::
-
 +$  typ
-$?  %ud  %ux  %da  %dr  %f  %p
-    %t   %ta  %tas
-    %rd  %rh  %rq  %rs  %s
-    ::  more complex column types
-    %list  %set  %map  %blob
-==
-
+  $?  %ud  %ux  %da  %dr  %f  %p
+      %t   %ta  %tas
+      %rd  %rh  %rq  %rs  %s
+      ::  more complex column types
+      %list  %set  %map  %blob
+  ==
 ::
 +$  column-name  term
 +$  column-type

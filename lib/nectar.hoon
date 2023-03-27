@@ -26,7 +26,7 @@
   ::  this is the only external arm you should use?
   ::
   ++  q
-    |=  [app=@tas =query]
+    |=  [=app =query]
     ^-  (quip row ^database)
     ?+  -.query
       =+  (run-query app query ~)
@@ -790,15 +790,15 @@
       =;  new=schema
         (~(put by new) col-name col)
       ::  if spot taken, shift existing spots that come after to the right
-      =+  %+  turn  
-            ~(val by schema.table) 
+      =+  %+  turn
+            ~(val by schema.table)
           |=(a=column-type spot.a)
       ?~  %+(find ~[spot.col] -)
         schema.table
       %-  ~(urn by schema.table)
-      |=  [term b=column-type]  
+      |=  [term b=column-type]
       ?.  (gte spot.b spot.col)
-        b 
+        b
       b(spot +(spot.b))
     ::  add new empty column to records
     =/  new-rows=(list row)
@@ -829,9 +829,9 @@
       %.  col-name
       %~  del  by
       %-  ~(urn by schema.table)
-      |=  [term b=column-type]  
+      |=  [term b=column-type]
       ?.  (gte spot.b spot.to-drop)
-        b 
+        b
       b(spot (sub spot.b 1))
     ::  Delete entries from records when dropped column is in key
     =.  records.table
