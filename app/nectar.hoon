@@ -8,7 +8,6 @@
 +$  state-1
   $:  %1
       =database:n
-      perms=(map table-name:n permission-level:n)
       tracking=(map table-name:n ship)
       stored-procedures=(mip app:n label:n stored-procedure:n)
   ==
@@ -56,17 +55,17 @@
   ^-  (quip card _this)
   ?+    mark  (on-poke:def mark vase)
       %nectar-query
-    ?>  =(our src):bowl  ::  TODO allow edits from others?? :O
+    ?>  =(our src):bowl  ::  TODO allow edits from others??
     =/  poke  !<(query-poke:n vase)
-    ::  use this only for stateful queries
+    ::  use this only for stateful queries on tables that WE control
     ::
-    ~|  "nectar: query pokes are only for stateful queries!"
-    ?>  ?=  $?  %update        %insert
+    ?.  ?=  $?  %update        %insert
                 %delete        %add-table
                 %rename-table  %drop-table
                 %update-rows
             ==
         -.query.poke
+      ~|("nectar: query pokes are only for stateful queries!" !!)
     =.  database.state  +:(~(q db:n database.state) poke)
     =^  cards  table-pub
       ::  stupid ass type refinement is the reason for this structure
@@ -78,34 +77,42 @@
         (give:du-pub [%track app.poke table.query.poke ~] query.poke)
       ::
           %add-table
+        =.  table-pub
+          (live:du-pub [%track app.poke name.query.poke ~]^~)
         (give:du-pub [%track app.poke name.query.poke ~] query.poke)
-      ::
-          ?(%drop-table %rename-table)
-        ::  if we are deleting or renaming a table that people track,
-        ::  ....do something about that
-        `table-pub
+      ::  if we are deleting or renaming a table that people track,
+      ::  kill the publication
+          %drop-table
+        `(kill:du-pub [%track app.poke name.query.poke ~]^~)
+          %rename-table
+        =.  table-pub
+          (live:du-pub [%track app.poke new.query.poke ~]^~)
+        `(kill:du-pub [%track app.poke old.query.poke ~]^~)
       ==
     [cards this]
   ::
       %nectar-set-perms
     ?>  =(our src):bowl
-    =/  poke  !<(set-perms:n vase)
-    :-  ~
-    %=    this
-        perms.state
-      %+  ~(put by perms.state)  p.poke
+    =/  poke   !<(set-perms:n vase)
+    =/  paths  [%track [- + ~]:p.poke]^~
+    =.  table-pub
       ?-  -.q.poke
-        ?(%public %private %set)  q.poke
+        %public   (public:du-pub paths)
+        %private  (secret:du-pub paths)
+        %set      (allow:du-pub ~(tap in +.q.poke) paths)
+      ::
           %add
-        =/  =permission-level:n  (~(gut by perms.state) p.poke [%set ~])
-        ?>  ?=(%set -.permission-level)
-        set+(~(put in +.permission-level) +.q.poke)
+        %+  perm:du-pub  paths
+        |=  old=(unit (set @p))
+        ?~  old  `+.q.poke
+        `(~(uni in u.old) +.q.poke)
           %del
-        =/  =permission-level:n  (~(gut by perms.state) p.poke [%set ~])
-        ?>  ?=(%set -.permission-level)
-        set+(~(del in +.permission-level) +.q.poke)
+        %+  perm:du-pub  paths
+        |=  old=(unit (set @p))
+        ?~  old  `+.q.poke
+        `(~(dif in u.old) +.q.poke)
       ==
-    ==
+    `this
   ::
       %nectar-add-procedure
     ?>  =(our src):bowl
@@ -125,19 +132,25 @@
       =,  track
       =.  database.state
         +:(~(q db:n database.state) -.table-name.q [%drop-table +.table-name.q])
-      ::  TODO if we're already tracking someone, stop tracking them here!
-      ::  TODO *kick* anyone tracking us!
-      ::  =^  cards  table-pub
-      ::    (give:du-pub [%track p -.tag.q ~] [%gone-top-level-tag ~])
+      ::  if we're already tracking someone, stop tracking them here!
+      =?    table-sub
+          (~(has by tracking.state) table-name.q)
+        (quit:da-sub source.q %nectar [%track [- + ~]:table-name.q])
+      ::  kill our path if we were serving this content previously
+      =.  table-pub  (kill:du-pub [%track [- + ~]:table-name.q]^~)
+      ::  start watching the chosen publisher
       =^  cards  table-sub
         (surf:da-sub source.q %nectar [%track [- + ~]:table-name.q])
       :-  cards
       this(tracking.state (~(put by tracking.state) [table-name source]:q))
     ::
         %stop
-      ::  TODO stop tracking a solid-state sub!
       =,  track
-      `this(tracking.state (~(del by tracking.state) table-name.q))
+      :-  ~
+      %=  this
+        tracking.state  (~(del by tracking.state) table-name.q)
+        table-sub  (quit:da-sub source.q %nectar [%track [- + ~]:table-name.q])
+      ==
     ==
   ::
   ::  SSS pokes
@@ -147,37 +160,21 @@
       (apply:da-sub !<(into:da-sub (fled vase)))
     [cards this]
   ::
+      %sss-surf-fail
+    =/  msg  !<(fail:da-sub (fled vase))
+    ~&  >>>  "not allowed to surf on {<msg>}!"
+    `this
+  ::
       %sss-on-rock
     =/  msg  !<(from:da-sub (fled vase))
-    ?-    -.msg
-        [%track @ @ ~]
-      =/  =app:n    -.+.-.msg
-      =/  =label:n  -.+.+.-.msg
-      ::  make sure we are actually tracking this table?
-      ::  ?.  =(src.msg (~(gut by tracking.state) [app label] our.bowl))
-      ::    `this  ::  TODO ignore for now, but crash in future when we can leave
-      `this
+    ?-  -.msg
+      [%track @ @ ~]  `this
     ==
   ::
       %sss-to-pub
     =/  msg  !<(into:du-pub (fled vase))
     ?-    -.msg
         [%track @ @ ~]
-      =/  =app:n    -.+.-.msg
-      =/  =label:n  -.+.+.-.msg
-      =/  perm  (~(gut by perms.state) [app label] [%private ~])
-      ::  only allow permitted subscribers
-      ?.  ?|  ?=(%public -.perm)
-              &(?=(%set -.perm) (~(has in +.perm) src.bowl))
-          ==
-        `this
-      ::  separately from permissions, ignore subscribers
-      ::  to tables that we ourselves are trackers for. this
-      ::  is a choice that can be edited if desired, but if so,
-      ::  note that rocks/waves we receive do not trigger us to
-      ::  send out ones ourselves.
-      ?:  !=(our.bowl (~(gut by tracking.state) [app label] our.bowl))
-        `this
       =^  cards  table-pub
         (apply:du-pub msg)
       [cards this]
@@ -187,17 +184,19 @@
 ++  on-peek
   |=  =path
   ^-  (unit (unit cage))
+  |^
   ::  use this for stateless queries
   ::
   ?+    path  [~ ~]
       [%x %query @ ^]
-    =/  app=@tas    i.t.t.path
-    =/  label=@tas  i.t.t.t.path
+    =/  =app:n    i.t.t.path
+    =/  =label:n  i.t.t.t.path
     ::  apply params to axes
     =/  params=(list @)  t.t.t.t.path
     =/  proc=stored-procedure:n
       (~(got bi stored-procedures.state) app label)
     ::  inject variable params into query
+    ::  TODO make this easier to use lol
     =.  q.proc
       |-
       ?~  params  q.proc
@@ -214,18 +213,32 @@
         ~[[p=~[[%& +.i.p.proc]] q=[%sand -.i.p.proc i.params]]]
       ==
     ::  perform query and return result
-    ~&  >  "your query: "
-    ~&  >  q.proc
-    ``noun+!>(`(list row:n)`-:(~(q db:n database.state) app q.proc))
+    ~&  >  "nectar query: {<q.proc>}"
+    ``noun+(mix-tables app label q.proc)
   ::
-      [%x %jammed-query @ @ ~]
-    =/  app=@tas  i.t.t.path
-    =/  =query:n  ;;(query:n (cue i.t.t.t.path))
+      [%x %jammed-query @ @ @ ~]
+    =/  =app:n    i.t.t.path
+    =/  =label:n  i.t.t.t.path
+    =/  =query:n  ;;(query:n (cue i.t.t.t.t.path))
     ::  perform query and return result
-    ~&  >  "your query: "
-    ~&  >  query
-    ``noun+!>(`(list row:n)`-:(~(q db:n database.state) app query))
+    ~&  >  "nectar query: {<query>}"
+    ``noun+(mix-tables app label query)
   ==
+  ::
+  ++  mix-tables
+    |=  [=app:n =label:n =query:n]
+    ^-  vase
+    ::  if query is on a table we *track*, temporarily insert that table
+    ::  into our DB for this query. TODO consider whether there's a better
+    ::  option here -- should we just replicate all table-rocks locally?
+    =/  =database:n
+      ?~  ship=(~(get by tracking.state) [app label])
+        database.state
+      %+  ~(put by database.state)  [app label]
+      =+  [u.ship %nectar [%track app label ~]]
+      +.+:(~(gut by read:da-sub) - ``*table:n)
+    !>(`(list row:n)`-:(~(q db:n database) app query))
+  --
 ::
 ++  on-agent
   |=  [=wire =sign:agent:gall]
@@ -237,6 +250,10 @@
       [~ %sss %on-rock @ @ @ %track @ @ ~]
     =.  table-sub  (chit:da-sub |3:wire sign)
     `this
+    ::
+      [~ %sss %scry-request @ @ @ %track @ @ ~]
+    =^  cards  table-sub  (tell:da-sub |3:wire sign)
+    [cards this]
   ==
 ::
 ++  on-arvo

@@ -18,8 +18,8 @@
 +$  set-perms
   %+  pair  table-name  ::  the local app poking us, for now
   $%  permission-level
-      [%add @p]
-      [%del @p]
+      [%add (set @p)]
+      [%del (set @p)]
   ==
 ::
 +$  app    term
