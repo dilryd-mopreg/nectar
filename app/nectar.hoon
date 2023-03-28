@@ -68,7 +68,6 @@
       ~|("nectar: query pokes are only for stateful queries!" !!)
     =.  database.state  +:(~(q db:n database.state) poke)
     =^  cards  table-pub
-      ::  stupid ass type refinement is the reason for this structure
       ?-    -.query.poke
           %update
         (give:du-pub [%track app.poke table.query.poke ~] query.poke)

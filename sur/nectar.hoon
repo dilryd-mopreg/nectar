@@ -17,7 +17,9 @@
 ::
 +$  set-perms
   %+  pair  table-name  ::  the local app poking us, for now
-  $%  permission-level
+  $%  [%private ~]
+      [%public ~]
+      [%set (set @p)]
       [%add (set @p)]
       [%del (set @p)]
   ==
@@ -25,13 +27,6 @@
 +$  app    term
 +$  label  @
 +$  table-name  [=app =label]
-::
-+$  permission-level
-  $%  [%private ~]
-      [%public ~]
-      [%set (set @p)]
-      ::  anything else here?
-  ==
 ::
 ::  TODO:  external indices
 ::  make index a separate object from table
