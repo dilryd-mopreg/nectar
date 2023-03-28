@@ -206,4 +206,13 @@
   %+  turn  ~(tap by nodeset)
   |=  [n1=node s=(set node)]
   (turn ~(tap in s) |=(n2=node [n1 n2]))
+::
+++  nodeset-to-set
+  |=  =nodeset
+  ^-  (set node)
+  %-  ~(uni in ~(key by nodeset))
+  ^-  (set node)
+  %-  ~(rep by nodeset)
+  |=  [p=[node (set node)] q=(set node)]
+  (~(uni in q) +.p)
 --

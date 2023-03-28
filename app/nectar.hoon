@@ -108,7 +108,7 @@
           %del
         %+  perm:du-pub  paths
         |=  old=(unit (set @p))
-        ?~  old  `+.q.poke
+        ?~  old  `~
         `(~(dif in u.old) +.q.poke)
       ==
     `this
@@ -132,9 +132,10 @@
       =.  database.state
         +:(~(q db:n database.state) -.table-name.q [%drop-table +.table-name.q])
       ::  if we're already tracking someone, stop tracking them here!
+      =/  prev  (~(get by tracking.state) table-name.q)
       =?    table-sub
-          (~(has by tracking.state) table-name.q)
-        (quit:da-sub source.q %nectar [%track [- + ~]:table-name.q])
+          ?=(^ prev)
+        (quit:da-sub u.prev %nectar [%track [- + ~]:table-name.q])
       ::  kill our path if we were serving this content previously
       =.  table-pub  (kill:du-pub [%track [- + ~]:table-name.q]^~)
       ::  start watching the chosen publisher
@@ -249,7 +250,7 @@
       [~ %sss %on-rock @ @ @ %track @ @ ~]
     =.  table-sub  (chit:da-sub |3:wire sign)
     `this
-    ::
+  ::
       [~ %sss %scry-request @ @ @ %track @ @ ~]
     =^  cards  table-sub  (tell:da-sub |3:wire sign)
     [cards this]
