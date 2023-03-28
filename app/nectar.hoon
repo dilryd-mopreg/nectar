@@ -62,7 +62,8 @@
     ?.  ?=  $?  %update        %insert
                 %delete        %add-table
                 %rename-table  %drop-table
-                %update-rows
+                %update-rows   %add-column
+                %edit-column   %drop-column
             ==
         -.query.poke
       ~|("nectar: query pokes are only for stateful queries!" !!)
@@ -73,6 +74,9 @@
         (give:du-pub [%track app.poke table.query.poke ~] query.poke)
       ::
           ?(%insert %delete %update-rows)
+        (give:du-pub [%track app.poke table.query.poke ~] query.poke)
+      ::
+          ?(%add-column %edit-column %drop-column)
         (give:du-pub [%track app.poke table.query.poke ~] query.poke)
       ::
           %add-table
