@@ -102,7 +102,7 @@
       `this(perms.state (~(put by perms.state) [app i.tag^~] level.q.edit))
     ::  reject edits to graph if we are tracking
     ::  someone else's on the given app+tag
-    ?:  (~(has by tracking.state) [app tag])
+    ?:  (~(has by tracking.state) [app i.tag^~])
       ~|("social-graph: can't edit a tracked tag!" !!)
     =^  wave  graph.state
       ?-  -.q.edit
@@ -156,7 +156,7 @@
     ?-    -.q.track
         %start
       ::  destroy our local representation of this top-level tag,
-      ::  to prepare for synchronization with remote
+      ::  to prepare for synchronization with remote.
       =.  graph.state
         (~(nuke-top-level-tag sg:g graph.state) p -.tag.q)
       ::  if we're already tracking someone, stop tracking them here!
@@ -173,10 +173,14 @@
       this(tracking.state (~(put by tracking.state) [p -.tag.q^~] source.q))
     ::
         %stop
+      ::  when we stop tracking remote, destroy our local representation!
+      ::  we do this so that future publications we might host ourselves
+      ::  are not out of sync with our old local representation of a remote.
       :-  ~
       %=  this
         tracking.state  (~(del by tracking.state) [p -.tag.q^~])
-        subgraph-sub  (quit:da-sub source.q %social-graph path)
+        subgraph-sub    (quit:da-sub source.q %social-graph path)
+        graph.state     (~(nuke-top-level-tag sg:g graph.state) p -.tag.q)
       ==
     ==
   ::
@@ -189,15 +193,30 @@
   ::
       %sss-surf-fail
     =/  msg  !<(fail:da-sub (fled vase))
-    ~&  >>>  "not allowed to surf on {<msg>}!"
-    `this
+    ?-    -.msg
+        [%track @ @ ~]
+      ~&  >>>  "social-graph: not allowed to track {<msg>}!"
+      `this(tracking.state (~(del by tracking.state) [- -.+^~]:+.-.msg))
+    ==
   ::
       %sss-to-pub
     =/  msg  !<(into:du-pub (fled vase))
     ?-    -.msg
         [%track @ @ ~]
+      =/  =app:g  `@tas`-.+.-.msg
+      =/  =tag:g  `path`+.+.-.msg
       ::  crash here to disable tracking on private subgraphs
-      ?<  ?=(%private (~(gut by perms.state) +.-.msg %private))
+      =/  perm=permission-level:g  (~(gut by perms.state) +.-.msg %private)
+      ?>  ?|  ?=(%public perm)
+              ?&  ?=(%only-tagged perm)
+                  ::  src.bowl must appear in nodeset under top-level tag
+                  %+  in-nodeset:g  ship+src.bowl
+                  (~(get-nodeset sg:g graph.state) app tag)
+          ==  ==
+      ::  separately from direct permissioning, don't let people track
+      ::  subgraphs that we ourselves are watchers for. this is because
+      ::  we won't be issuing a publication, so it would mislead them.
+      ?<  (~(has by tracking.state) [app tag])
       =^  cards  subgraph-pub
         (apply:du-pub msg)
       [cards this]
@@ -209,6 +228,9 @@
         [%track @ @ ~]
       =/  =app:g  `@tas`-.+.-.msg
       =/  =tag:g  `path`+.+.-.msg
+      ::  "ignore" rock if sender not in our tracking map
+      ?.  =(src.msg (~(gut by tracking.state) [app tag] our.bowl))
+        `this
       =.  graph.state
         ?~  wave.msg
           ::  if no wave, use rock in msg as setpoint
@@ -242,15 +264,21 @@
   ^-  (quip card _this)
   ?>  ?=(%poke-ack -.sign)
   ?~  p.sign  `this
-  %-  (slog u.p.sign)
   ?+    wire   `this
       [~ %sss %on-rock @ @ @ %track @ @ ~]
     =.  subgraph-sub  (chit:da-sub |3:wire sign)
     `this
   ::
       [~ %sss %scry-request @ @ @ %track @ @ ~]
+    ~&  >>>  "social-graph: removed from {<|3:wire>}"
     =^  cards  subgraph-sub  (tell:da-sub |3:wire sign)
-    [cards this]
+    =/  =app:g  -:|7:wire
+    =/  top=@   -:|8:wire
+    :-  cards
+    %=  this
+      tracking.state  (~(del by tracking.state) [app top^~])
+      graph.state     (~(nuke-top-level-tag sg:g graph.state) app top)
+    ==
   ==
 ::
 ++  on-arvo
@@ -292,7 +320,8 @@
       [%controller @ ^]
     =/  =app:g  `@tas`i.t.path
     =/  =tag:g  t.t.path
-    controller+?~(who=(~(get by tracking.state) [app tag]) our.bowl u.who)
+    ?~  tag  controller+our.bowl
+    controller+(~(gut by tracking.state) [app i.tag^~] our.bowl)
   ::
   ::  /nodeset/[app]/[tag]
   ::  returns the full nodeset (jug node node) in given app+tag

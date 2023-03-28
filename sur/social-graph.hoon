@@ -25,7 +25,7 @@
 ::  permissions are placed on an app + top-level tag:
 ::  - %private (default): no one can see this subgraph
 ::  - %public: anyone can track this subgraph
-::  - %only-tagged: only ships that *have* the top-level tag can track subgraph
+::  - %only-tagged: only ships that have the *top-level* tag can track subgraph
 ::
 +$  permission-level
   $~  %private
