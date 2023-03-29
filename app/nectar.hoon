@@ -1,4 +1,4 @@
-/-  shared-table
+/-  shared-table, table-updates
 /+  verb, dbug, default-agent,
     io=agentio, n=nectar, *mip, *sss
 |%
@@ -20,6 +20,7 @@
 ::  SSS declarations
 =/  table-sub  (mk-subs shared-table ,[%track @ @ ~])
 =/  table-pub  (mk-pubs shared-table ,[%track @ @ ~])
+=/  updates-pub  (mk-pubs table-updates ,[%updates @ @ ~])
 ::
 =|  state=state-1
 |_  =bowl:gall
@@ -32,22 +33,26 @@
     du-pub
       =/  du  (du shared-table ,[%track @ @ ~])
       (du table-pub bowl -:!>(*result:du))
+    du-updates
+      =/  du  (du table-updates ,[%updates @ @ ~])
+      (du updates-pub bowl -:!>(*result:du))
 ::
 ++  on-init  `this(state *state-1)
 ::
-++  on-save  !>([state table-sub table-pub])
+++  on-save  !>([state table-sub table-pub updates-pub])
 ::
 ++  on-load
   |=  =vase
   ^-  (quip card _this)
   ?:  =(%0 -.q.vase)
     on-init
-  =/  old  !<([=state-1 =_table-sub =_table-pub] vase)
+  =/  old  !<([=state-1 =_table-sub =_table-pub =_updates-pub] vase)
   :-  ~
   %=  this
-    state      state-1.old
-    table-sub  table-sub.old
-    table-pub  table-pub.old
+    state        state-1.old
+    table-sub    table-sub.old
+    table-pub    table-pub.old
+    updates-pub  updates-pub.old
   ==
 ::
 ++  on-poke
@@ -166,16 +171,24 @@
   ::
       %sss-on-rock
     =/  msg  !<(from:da-sub (fled vase))
-    ?-  -.msg
-      [%track @ @ ~]  `this
+    ?-    -.msg
+        [%track @ @ ~]
+      ?~  wave.msg  `this
+      =^  cards  updates-pub
+        (give:du-updates [%updates +.-.msg] `query:n`u.wave.msg)
+      [cards this]
     ==
   ::
       %sss-to-pub
-    =/  msg  !<(into:du-pub (fled vase))
+    =/  msg  !<($%(into:du-pub into:du-updates) (fled vase))
     ?-    -.msg
         [%track @ @ ~]
       =^  cards  table-pub
         (apply:du-pub msg)
+      [cards this]
+        [%updates @ @ ~]
+      =^  cards  updates-pub
+        (apply:du-updates msg)
       [cards this]
     ==
   ==
