@@ -187,6 +187,9 @@
   ::  use this for stateless queries
   ::
   ?+    path  [~ ~]
+  ::
+  ::  TODO: add path to see who controls a given table
+  ::
       [%x %query @ ^]
     =/  =app:n    i.t.t.path
     =/  =label:n  i.t.t.t.path
@@ -228,8 +231,8 @@
     |=  [=app:n =label:n =query:n]
     ^-  vase
     ::  if query is on a table we *track*, temporarily insert that table
-    ::  into our DB for this query. TODO consider whether there's a better
-    ::  option here -- should we just replicate all table-rocks locally?
+    ::  into our DB for this query. TODO handle joins between multiple
+    ::  remote tables!
     =/  =database:n
       ?~  ship=(~(get by tracking.state) [app label])
         database.state
