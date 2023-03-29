@@ -132,11 +132,21 @@
         ?:  ?=(%ship -.to.q.edit)
           [+.to.q.edit ~ ~]
         ~
+      ::  only remove the ship(s) that were untagged if they no longer
+      ::  appear in the top-level-tag nodeset!
+      =?    new
+          ?=(%del-tag -.q.edit)
+        %-  silt
+        %+  skip  ~(tap in new)
+        |=  p=@p
+        (in-nodeset:g ship+p (~(get-nodeset sg:g graph.state) app i.tag^~))
       %+  perm:du-pub  [%track app i.tag ~]^~
       |=  old=(unit (set @p))
-      ?-  -.q.edit
-        %add-tag  ?~(old `new `(~(uni in u.old) new))
-        %del-tag  ?~(old `~ `(~(dif in u.old) new))
+      ?-    -.q.edit
+          %add-tag
+        ?~(old `new `(~(uni in u.old) new))
+          %del-tag
+        ?~(old `~ `(~(dif in u.old) new))
       ==
     ::  hand out update to subscribers on this app and (top-level) tag
     =^  cards  subgraph-pub
@@ -228,9 +238,12 @@
         [%track @ @ ~]
       =/  =app:g  `@tas`-.+.-.msg
       =/  =tag:g  `path`+.+.-.msg
-      ::  "ignore" rock if sender not in our tracking map
+      ::  quit sub if sender not in our tracking map
       ?.  =(src.msg (~(gut by tracking.state) [app tag] our.bowl))
-        `this
+        :_  this  :_  ~
+        %+  ~(poke pass:io /self)
+          [our.bowl %social-graph]
+        social-graph-track+!>(`track:g`[app %stop src.msg tag])
       =.  graph.state
         ?~  wave.msg
           ::  if no wave, use rock in msg as setpoint

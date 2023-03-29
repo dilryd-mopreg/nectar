@@ -192,12 +192,7 @@
   |=  [no=node ns=nodeset]
   ^-  ?
   =-  (~(has in -) no)
-  ^-  (set node)
-  %-  ~(uni in ~(key by ns))
-  ^-  (set node)
-  %-  ~(rep by ns)
-  |=  [p=[node (set node)] q=(set node)]
-  (~(uni in q) +.p)
+  (nodeset-to-set ns)
 ::
 ++  tap-nodeset
   |=  =nodeset
