@@ -204,11 +204,13 @@
   |=  =path
   ^-  (unit (unit cage))
   |^
-  ::  use this for stateless queries
-  ::
   ?+    path  [~ ~]
+      [%x %controller @ @ ~]
+    =/  =app:n    i.t.t.path
+    =/  =label:n  i.t.t.t.path
+    ``noun+!>(`ship`(~(gut by tracking.state) [app label] our.bowl))
   ::
-  ::  TODO: add path to see who controls a given table
+  ::  use this for stateless queries ("reads")
   ::
       [%x %query @ ^]
     =/  =app:n    i.t.t.path
