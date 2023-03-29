@@ -8,7 +8,7 @@
 +$  state-2
   $:  %2
       graph=social-graph:g
-      perms=(map app:g permission-level:g)
+      perms=(map [app:g tag:g] permission-level:g)
       tracking=(map [app:g tag:g] ship)
   ==
 +$  card  card:agent:gall
@@ -73,19 +73,36 @@
     =/  =edit:g  !<(edit:g vase)
     ::  !! need this info in bowl for perms !!
     =/  =app:g  p.edit
-    ?:  ?=(%set-perms -.q.edit)
-      `this(perms.state (~(put by perms.state) app level.q.edit))
     =/  =tag:g  ::  this is so annoying, type refinement issue
       ?-  -.q.edit
+        %set-perms                        tag.q.edit
         ?(%add-tag %del-tag)              tag.q.edit
         ?(%nuke-tag %nuke-top-level-tag)  tag.q.edit
       ==
     ::  tag cannot be empty
     ?:  ?=(~ tag)
       ~|("social-graph: tag cannot be empty!" !!)
+    ?:  ?=(%set-perms -.q.edit)
+      ::  change permissions for a subgraph publication
+      =/  paths  [%track app i.tag ~]^~
+      =.  subgraph-pub
+        ?-  level.q.edit
+          %public   (public:du-pub paths)
+          %private  (secret:du-pub paths)
+            %only-tagged
+          %+  allow:du-pub
+            ::  src.bowl must appear in nodeset under top-level tag
+            =-  %+  murn  ~(tap in -)
+                |=  =node:g
+                ?.  ?=(%ship -.node)  ~
+                `+.node
+            (nodeset-to-set:g (~(get-nodeset sg:g graph.state) app i.tag^~))
+          paths
+        ==
+      `this(perms.state (~(put by perms.state) [app i.tag^~] level.q.edit))
     ::  reject edits to graph if we are tracking
     ::  someone else's on the given app+tag
-    ?:  (~(has by tracking.state) [app tag])
+    ?:  (~(has by tracking.state) [app i.tag^~])
       ~|("social-graph: can't edit a tracked tag!" !!)
     =^  wave  graph.state
       ?-  -.q.edit
@@ -100,7 +117,26 @@
         (~(nuke-tag sg:g graph.state) app tag)
           %nuke-top-level-tag
         :-  [%gone-top-level-tag ~]
-        (~(nuke-top-level-tag sg:g graph.state) app -.tag)
+        (~(nuke-top-level-tag sg:g graph.state) app i.tag)
+      ==
+    ::  allow/block edited ships on top-level tags, if subgraph is
+    ::  permissioned to %only-tagged
+    =?    subgraph-pub
+        ?=(%only-tagged (~(gut by perms.state) [app i.tag^~] %private))
+      ?.  ?=(?(%add-tag %del-tag) -.q.edit)  subgraph-pub
+      =/  new=(set @p)
+        ?:  &(?=(%ship -.from.q.edit) ?=(%ship -.to.q.edit))
+          (silt ~[+.from +.to]:q.edit)
+        ?:  ?=(%ship -.from.q.edit)
+          [+.from.q.edit ~ ~]
+        ?:  ?=(%ship -.to.q.edit)
+          [+.to.q.edit ~ ~]
+        ~
+      %+  perm:du-pub  [%track app i.tag ~]^~
+      |=  old=(unit (set @p))
+      ?-  -.q.edit
+        %add-tag  ?~(old `new `(~(uni in u.old) new))
+        %del-tag  ?~(old `~ `(~(dif in u.old) new))
       ==
     ::  hand out update to subscribers on this app and (top-level) tag
     =^  cards  subgraph-pub
@@ -110,32 +146,80 @@
       %social-graph-track
     ?>  =(our src):bowl
     =/  =track:g  !<(track:g vase)
+    =,  track
     ::  don't track yourself..
-    ?:  =(our.bowl source.q.track)
+    ?:  =(our.bowl source.q)
       ~|("social-graph: don't track yourself!" !!)
-    ?:  ?=(~ tag.q.track)
+    ?:  ?=(~ tag.q)
       ~|("social-graph: tracked tag cannot be empty!" !!)
+    =/  path  [%track p -.tag.q ~]
     ?-    -.q.track
         %start
       ::  destroy our local representation of this top-level tag,
-      ::  to prepare for synchronization with remote
-      =,  track
+      ::  to prepare for synchronization with remote.
       =.  graph.state
         (~(nuke-top-level-tag sg:g graph.state) p -.tag.q)
-      ::  TODO if we're already tracking someone, stop tracking them here!
-      ::  TODO *kick* anyone tracking us!
-      =^  cards  subgraph-pub
-        (give:du-pub [%track p -.tag.q ~] [%gone-top-level-tag ~])
+      ::  if we're already tracking someone, stop tracking them here!
+      =/  prev  (~(get by tracking.state) [p -.tag.q^~])
+      =?    subgraph-sub
+          ?=(^ prev)
+        (quit:da-sub u.prev %social-graph path)
+      ::  kill our path if we were serving this content previously
+      =.  subgraph-pub  (kill:du-pub path^~)
+      ::  start watching the chosen publisher
       =^  cards  subgraph-sub
-        =-  [(weld cards -.-) +.-]
-        (surf:da-sub source.q %social-graph [%track p -.tag.q ~])
+        (surf:da-sub source.q %social-graph path)
       :-  cards
       this(tracking.state (~(put by tracking.state) [p -.tag.q^~] source.q))
     ::
         %stop
-      ::  TODO stop tracking a solid-state sub!
-      =,  track
-      `this(tracking.state (~(del by tracking.state) [p -.tag.q^~]))
+      ::  when we stop tracking remote, destroy our local representation!
+      ::  we do this so that future publications we might host ourselves
+      ::  are not out of sync with our old local representation of a remote.
+      :-  ~
+      %=  this
+        tracking.state  (~(del by tracking.state) [p -.tag.q^~])
+        subgraph-sub    (quit:da-sub source.q %social-graph path)
+        graph.state     (~(nuke-top-level-tag sg:g graph.state) p -.tag.q)
+      ==
+    ==
+  ::
+  ::  SSS pokes
+  ::
+      %sss-subgraph
+    =^  cards  subgraph-sub
+      (apply:da-sub !<(into:da-sub (fled vase)))
+    [cards this]
+  ::
+      %sss-surf-fail
+    =/  msg  !<(fail:da-sub (fled vase))
+    ?-    -.msg
+        [%track @ @ ~]
+      ~&  >>>  "social-graph: not allowed to track {<msg>}!"
+      `this(tracking.state (~(del by tracking.state) [- -.+^~]:+.-.msg))
+    ==
+  ::
+      %sss-to-pub
+    =/  msg  !<(into:du-pub (fled vase))
+    ?-    -.msg
+        [%track @ @ ~]
+      =/  =app:g  `@tas`-.+.-.msg
+      =/  =tag:g  `path`+.+.-.msg
+      ::  crash here to disable tracking on private subgraphs
+      =/  perm=permission-level:g  (~(gut by perms.state) +.-.msg %private)
+      ?>  ?|  ?=(%public perm)
+              ?&  ?=(%only-tagged perm)
+                  ::  src.bowl must appear in nodeset under top-level tag
+                  %+  in-nodeset:g  ship+src.bowl
+                  (~(get-nodeset sg:g graph.state) app tag)
+          ==  ==
+      ::  separately from direct permissioning, don't let people track
+      ::  subgraphs that we ourselves are watchers for. this is because
+      ::  we won't be issuing a publication, so it would mislead them.
+      ?<  (~(has by tracking.state) [app tag])
+      =^  cards  subgraph-pub
+        (apply:du-pub msg)
+      [cards this]
     ==
   ::
       %sss-on-rock
@@ -144,9 +228,9 @@
         [%track @ @ ~]
       =/  =app:g  `@tas`-.+.-.msg
       =/  =tag:g  `path`+.+.-.msg
-      ::  make sure we are actually tracking this app+tag
+      ::  "ignore" rock if sender not in our tracking map
       ?.  =(src.msg (~(gut by tracking.state) [app tag] our.bowl))
-        `this  ::  TODO ignore for now, but crash in future when we can leave
+        `this
       =.  graph.state
         ?~  wave.msg
           ::  if no wave, use rock in msg as setpoint
@@ -171,38 +255,6 @@
         ==
       `this
     ==
-  ::
-      %sss-to-pub
-    =/  msg  !<(into:du-pub (fled vase))
-    ?-    -.msg
-        [%track @ @ ~]
-      =/  =app:g  `@tas`-.+.-.msg
-      =/  =tag:g  `path`+.+.-.msg
-      =/  perm  (~(gut by perms.state) app %private)
-      ::  only allow permitted subscribers
-      ?>  ?|  =(%public perm)
-              ?&  =(%only-tagged perm)
-                  ::  src.bowl must appear in nodeset under top-level tag
-                  =/  =nodeset:g  (~(get-nodeset sg:g graph.state) app tag)
-                  ?:  (~(has by nodeset) [%ship src.bowl])  %.y
-                  %-  ~(any by nodeset)
-                  |=(n=(set node:g) (~(has in n) [%ship src.bowl]))
-          ==  ==
-      ::  separately from permissions, ignore subscribers
-      ::  to tags that we ourselves are trackers for. this
-      ::  is a choice that can be edited if desired, but if so,
-      ::  note that rocks/waves we receive do not trigger us to
-      ::  send out ones ourselves.
-      ?>  =(our.bowl (~(gut by tracking.state) [app tag] our.bowl))
-      =^  cards  subgraph-pub
-        (apply:du-pub msg)
-      [cards this]
-    ==
-  ::
-      %sss-subgraph
-    =^  cards  subgraph-sub
-      (apply:da-sub !<(into:da-sub (fled vase)))
-    [cards this]
   ==
 ::
 ++  on-peek   handle-scry:hc
@@ -212,11 +264,21 @@
   ^-  (quip card _this)
   ?>  ?=(%poke-ack -.sign)
   ?~  p.sign  `this
-  %-  (slog u.p.sign)
   ?+    wire   `this
       [~ %sss %on-rock @ @ @ %track @ @ ~]
     =.  subgraph-sub  (chit:da-sub |3:wire sign)
     `this
+  ::
+      [~ %sss %scry-request @ @ @ %track @ @ ~]
+    ~&  >>>  "social-graph: removed from {<|3:wire>}"
+    =^  cards  subgraph-sub  (tell:da-sub |3:wire sign)
+    =/  =app:g  -:|7:wire
+    =/  top=@   -:|8:wire
+    :-  cards
+    %=  this
+      tracking.state  (~(del by tracking.state) [app top^~])
+      graph.state     (~(nuke-top-level-tag sg:g graph.state) app top)
+    ==
   ==
 ::
 ++  on-arvo
@@ -258,7 +320,8 @@
       [%controller @ ^]
     =/  =app:g  `@tas`i.t.path
     =/  =tag:g  t.t.path
-    controller+?~(who=(~(get by tracking.state) [app tag]) our.bowl u.who)
+    ?~  tag  controller+our.bowl
+    controller+(~(gut by tracking.state) [app i.tag^~] our.bowl)
   ::
   ::  /nodeset/[app]/[tag]
   ::  returns the full nodeset (jug node node) in given app+tag
