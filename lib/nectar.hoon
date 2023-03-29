@@ -2,21 +2,6 @@
 /+  *mip
 |%
 ::
-::  helpers
-::
-++  make-schema
-  |=  lis=(list [term column-type])
-  ^-  schema
-  (~(gas by *schema) lis)
-::
-++  make-indices
-  |=  lis=(list key-type)
-  ^-  indices
-  %-  ~(gas by *indices)
-  %+  turn  lis
-  |=  =key-type
-  [cols.key-type key-type]
-::
 ::  database engine
 ::
 ++  db
