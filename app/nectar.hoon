@@ -187,6 +187,8 @@
         (apply:du-pub msg)
       [cards this]
         [%updates @ @ ~]
+      ::  local watchers only
+      ?>  =(src our):bowl
       =^  cards  updates-pub
         (apply:du-updates msg)
       [cards this]

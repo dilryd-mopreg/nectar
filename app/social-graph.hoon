@@ -180,7 +180,7 @@
       =/  =tag:g  `path`+.+.-.msg
       =/  perm  (~(gut by perms.state) app %private)
       ::  only allow permitted subscribers
-      ?.  ?|  =(%public perm)
+      ?>  ?|  =(%public perm)
               ?&  =(%only-tagged perm)
                   ::  src.bowl must appear in nodeset under top-level tag
                   =/  =nodeset:g  (~(get-nodeset sg:g graph.state) app tag)
@@ -188,14 +188,12 @@
                   %-  ~(any by nodeset)
                   |=(n=(set node:g) (~(has in n) [%ship src.bowl]))
           ==  ==
-        `this
       ::  separately from permissions, ignore subscribers
       ::  to tags that we ourselves are trackers for. this
       ::  is a choice that can be edited if desired, but if so,
       ::  note that rocks/waves we receive do not trigger us to
       ::  send out ones ourselves.
-      ?:  !=(our.bowl (~(gut by tracking.state) [app tag] our.bowl))
-        `this
+      ?>  =(our.bowl (~(gut by tracking.state) [app tag] our.bowl))
       =^  cards  subgraph-pub
         (apply:du-pub msg)
       [cards this]
