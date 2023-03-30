@@ -15,7 +15,7 @@
 --
 ::
 ^-  agent:gall
-%+  verb  &
+::  %+  verb  &
 %-  agent:dbug
 ::  SSS declarations
 =/  table-sub  (mk-subs shared-table ,[%track @ @ ~])
@@ -178,10 +178,7 @@
     =/  msg  !<(from:da-sub (fled vase))
     ?-    -.msg
         [%track @ @ ~]
-      ?~  wave.msg  `this
-      =^  cards  updates-pub
-        (give:du-updates [%updates +.-.msg] `query:n`u.wave.msg)
-      [cards this]
+      `this
     ==
   ::
       %sss-to-pub
@@ -237,7 +234,7 @@
         ~[[p=~[[%& +.i.p.proc]] q=[%sand -.i.p.proc i.params]]]
       ==
     ::  perform query and return result
-    ~&  >  "nectar query: {<q.proc>}"
+    ::  ~&  >  "nectar query: {<q.proc>}"
     ``noun+(mix-tables app label q.proc)
   ::
       [%x %jammed-query @ @ @ ~]
@@ -245,7 +242,7 @@
     =/  =label:n  i.t.t.t.path
     =/  =query:n  ;;(query:n (cue i.t.t.t.t.path))
     ::  perform query and return result
-    ~&  >  "nectar query: {<query>}"
+    ::  ~&  >  "nectar query: {<query>}"
     ``noun+(mix-tables app label query)
   ==
   ::
