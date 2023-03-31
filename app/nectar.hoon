@@ -207,6 +207,11 @@
     =/  =label:n  i.t.t.t.path
     ``noun+!>(`ship`(~(gut by tracking.state) [app label] our.bowl))
   ::
+      [%x %table-exists @ @ ~]
+    =/  =app:n    i.t.t.path
+    =/  =label:n  i.t.t.t.path
+    ``noun+!>(`?`(~(has by database.state) [app label]))
+  ::
   ::  use this for stateless queries ("reads")
   ::
       [%x %query @ ^]
