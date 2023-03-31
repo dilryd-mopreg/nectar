@@ -73,31 +73,31 @@
         -.query.poke
       ~|("nectar: query pokes are only for stateful queries!" !!)
     =.  database.state  +:(~(q db:n database.state) poke)
-    =^  cards  table-pub
-      ?-    -.query.poke
-          %update
-        (give:du-pub [%track app.poke table.query.poke ~] query.poke)
-      ::
-          ?(%insert %delete %update-rows)
-        (give:du-pub [%track app.poke table.query.poke ~] query.poke)
-      ::
-          ?(%add-column %edit-column %drop-column)
-        (give:du-pub [%track app.poke table.query.poke ~] query.poke)
-      ::
-          %add-table
-        =.  table-pub
-          (live:du-pub [%track app.poke name.query.poke ~]^~)
-        (give:du-pub [%track app.poke name.query.poke ~] query.poke)
-      ::  if we are deleting or renaming a table that people track,
-      ::  kill the publication
-          %drop-table
-        `(kill:du-pub [%track app.poke name.query.poke ~]^~)
-          %rename-table
-        =.  table-pub
-          (live:du-pub [%track app.poke new.query.poke ~]^~)
-        `(kill:du-pub [%track app.poke old.query.poke ~]^~)
-      ==
-    [cards this]
+    ::  =^  cards  table-pub
+    ::    ?-    -.query.poke
+    ::        %update
+    ::      (give:du-pub [%track app.poke table.query.poke ~] query.poke)
+    ::    ::
+    ::        ?(%insert %delete %update-rows)
+    ::      (give:du-pub [%track app.poke table.query.poke ~] query.poke)
+    ::    ::
+    ::        ?(%add-column %edit-column %drop-column)
+    ::      (give:du-pub [%track app.poke table.query.poke ~] query.poke)
+    ::    ::
+    ::        %add-table
+    ::      =.  table-pub
+    ::        (live:du-pub [%track app.poke name.query.poke ~]^~)
+    ::      (give:du-pub [%track app.poke name.query.poke ~] query.poke)
+    ::    ::  if we are deleting or renaming a table that people track,
+    ::    ::  kill the publication
+    ::        %drop-table
+    ::      `(kill:du-pub [%track app.poke name.query.poke ~]^~)
+    ::        %rename-table
+    ::      =.  table-pub
+    ::        (live:du-pub [%track app.poke new.query.poke ~]^~)
+    ::      `(kill:du-pub [%track app.poke old.query.poke ~]^~)
+    ::    ==
+    `this
   ::
       %nectar-set-perms
     ?>  =(our src):bowl
