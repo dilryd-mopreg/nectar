@@ -33,7 +33,12 @@
     ^+  database
     ?:  (~(has by database) name)
       ~|("nectar: table with that id already exists" !!)
-    (~(put by database) name (~(create tab table) ~))
+    =/  existing-rows
+      (~(gut by records.table) primary-key.table *record)
+    %+  ~(put by database)  name
+    %-  ~(create tab table)
+    ?:  ?=(%| -.existing-rows)  ~
+    ~(val by p.existing-rows)
   ::
   ++  insert-rows
     |=  [name=table-name rows=(list *)]
