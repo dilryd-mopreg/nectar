@@ -356,7 +356,12 @@
         %address  [- (slav %ux i.t.t.t.path)]
         %entity   [- [`@tas`i `@t`i.t]:t.t.t.path]
       ==
-    =/  =tag:g  t.t.t.t.path
+    =/  =tag:g
+      ?-  -.node
+        %ship     t.t.t.t.path
+        %address  t.t.t.t.path
+        %entity   t.t.t.t.t.path
+      ==
     nodes+(~(get-nodes sg:g graph.state) node app `tag)
   ::
   ::  /nodes/[app]/[from-node]
